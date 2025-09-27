@@ -1,0 +1,6 @@
+@AccessoryCreation_HostAddress = http://localhost:5160
+
+GET {{AccessoryCreation_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
