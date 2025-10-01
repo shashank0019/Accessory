@@ -4,27 +4,20 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AccessoryCreation.Models
 {
-    // Represents an Accessory record
-    public class Accessory
+    // -------------------------------
+    // Catalog Models
+    // -------------------------------
+
+    // Output of ITHW_AMT_AccessoryCreation_GetAccessories
+    public class AccessoryCatalogDto
     {
-        public int AccessoryMID { get; set; }
         public int AccessoryWFMID { get; set; }
-
-        [Required]
         public string AccessoryName { get; set; }
-
         public string AccessoryType { get; set; }
-        public string Make { get; set; }
-        public DateTime? AcqDate { get; set; }
-        public int AccessoryCount { get; set; }
-        public string ProductStatus { get; set; }
-
-        [Required]
-        public string Remarks { get; set; }
     }
 
-    // For inserting new accessory in catalog
-    public class AccessoryModel
+    // Input for IJTM_AML_AccessoryCreation_AddNewAccessory
+    public class AccessoryCreateDto
     {
         [Required]
         public string AccessoryName { get; set; }
@@ -44,18 +37,53 @@ namespace AccessoryCreation.Models
         public string Remarks { get; set; }
     }
 
-    // Master request (Initiator + List of Accessories)
-    public class AccessoryRequestMaster
+    // -------------------------------
+    // Request Models
+    // -------------------------------
+
+    // Insert into Master: ITHW_AMT_AccessoryCreation_Master_Insert
+    public class AccessoryRequestMasterDto
     {
         public int MasterId { get; set; }
+
+        [Required]
         public int InitiatorEmpId { get; set; }
-        public List<Accessory> Accessories { get; set; } = new List<Accessory>();
     }
 
-    // Convenience wrapper for request details
-    public class AccessoryRequest
+    // Insert details: ITHW_AMT_AccessoryCreation_Insert
+    public class AccessoryRequestDetailDto
     {
-        public int RequestId { get; set; }
-        public List<Accessory> Accessories { get; set; } = new List<Accessory>();
+        public int AccessoryMID { get; set; }
+        public string AccessoryType { get; set; }
+        public string AccessoryName { get; set; }
+        public string Make { get; set; }
+        public DateTime? AcqDate { get; set; }
+        public int AccessoryCount { get; set; }
+        public string ProductStatus { get; set; }
+        public string Remarks { get; set; }
+    }
+
+    // Update inventory: ITHW_AMT_AccessoryQuantity_InsertUpdate
+    public class AccessoryInventoryDto
+    {
+        public int AccessoryMID { get; set; }
+        public string AccessoryType { get; set; }
+        public string AccessoryName { get; set; }
+        public int AccessoryCount { get; set; }
+        public string ProductStatus { get; set; }
+    }
+
+    // -------------------------------
+    // Query Models
+    // -------------------------------
+
+    // Output of ITHW_AMT_AccessoryCreation_GetRequestedAccessoryDetails
+    public class AccessoryRequestDetailResultDto
+    {
+        public int AccessoryWFMID { get; set; }
+        public string AccessoryName { get; set; }
+        public int AccessoryCount { get; set; }
+        public string ProductStatus { get; set; }
+        public string Remarks { get; set; }
     }
 }

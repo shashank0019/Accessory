@@ -16,7 +16,9 @@ namespace AccessoryCreation.Controllers
             _businessLogic = businessLogic;
         }
 
-        #region Catalog Endpoints
+        // -------------------------------
+        // Catalog Endpoints
+        // -------------------------------
         [HttpGet]
         public IActionResult GetAccessories()
         {
@@ -24,9 +26,12 @@ namespace AccessoryCreation.Controllers
             return Ok(new { Success = true, Data = data });
         }
 
-        [HttpPost("add")]
-        public IActionResult AddAccessory([FromBody] AccessoryModel model)
+        [HttpPost]
+        public IActionResult AddAccessory([FromBody] AccessoryCreateDto model)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(new { Success = false, Errors = ModelState });
+
             try
             {
                 int newId = _businessLogic.AddAccessory(model);
@@ -37,9 +42,10 @@ namespace AccessoryCreation.Controllers
                 return BadRequest(new { Success = false, Message = ex.Message });
             }
         }
-        #endregion
 
-        #region Request Endpoints
+        // -------------------------------
+        // Request Endpoints
+        // -------------------------------
         [HttpPost("master")]
         public IActionResult InsertMaster([FromBody] int initiatorEmpId)
         {
@@ -55,7 +61,7 @@ namespace AccessoryCreation.Controllers
         }
 
         [HttpPost("details/{masterId}")]
-        public IActionResult InsertDetails(int masterId, [FromBody] List<Accessory> accessories)
+        public IActionResult InsertDetails(int masterId, [FromBody] List<AccessoryRequestDetailDto> accessories)
         {
             try
             {
@@ -69,7 +75,7 @@ namespace AccessoryCreation.Controllers
         }
 
         [HttpPost("approve/{masterId}")]
-        public IActionResult ApproveAccessoryRequest(int masterId, [FromBody] List<Accessory> accessories)
+        public IActionResult ApproveAccessoryRequest(int masterId, [FromBody] List<AccessoryInventoryDto> accessories)
         {
             try
             {
@@ -91,6 +97,5 @@ namespace AccessoryCreation.Controllers
 
             return Ok(new { Success = true, Data = data });
         }
-        #endregion
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using AccessoryCreation.Models;
@@ -14,45 +15,56 @@ namespace AccessoryCreation.DataAccess
             _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
         }
 
-        // 🔹 Expose connection string for BLL if needed
         public string ConnectionString => _connectionString;
 
-        #region Catalog Methods
-        public DataSet GetAccessories()
+        // -------------------------------
+        // Catalog Methods
+        // -------------------------------
+        public List<AccessoryCatalogDto> GetAccessories()
         {
-            var ds = new DataSet();
+            var list = new List<AccessoryCatalogDto>();
             using var conn = new SqlConnection(_connectionString);
             using var cmd = new SqlCommand("ITHW_AMT_AccessoryCreation_GetAccessories", conn)
             {
                 CommandType = CommandType.StoredProcedure
             };
-            using var da = new SqlDataAdapter(cmd);
-            da.Fill(ds);
-            return ds;
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list.Add(new AccessoryCatalogDto
+                {
+                    AccessoryWFMID = reader.GetInt32(reader.GetOrdinal("AccessoryWFMID")),
+                    AccessoryName = reader["AccessoryName"].ToString(),
+                    AccessoryType = reader["AccessoryType"].ToString()
+                });
+            }
+            return list;
         }
 
-        public int InsertAccessory(Accessory model)
+        public int InsertAccessory(AccessoryCreateDto model)
         {
             using var conn = new SqlConnection(_connectionString);
             using var cmd = new SqlCommand("IJTM_AML_AccessoryCreation_AddNewAccessory", conn)
             {
                 CommandType = CommandType.StoredProcedure
             };
-            cmd.Parameters.AddWithValue("@AccessoryName", model.AccessoryName ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@AccessoryName", model.AccessoryName);
             cmd.Parameters.AddWithValue("@AccessoryType", model.AccessoryType ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("@Make", model.Make ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("@AcqDate", model.AcqDate == default(DateTime) ? (object)DBNull.Value : model.AcqDate);
+            cmd.Parameters.AddWithValue("@Make", model.Make);
+            cmd.Parameters.AddWithValue("@AcqDate", model.AcqDate ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@AccessoryCount", model.AccessoryCount);
             cmd.Parameters.AddWithValue("@ProductStatus", model.ProductStatus ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("@Remarks", model.Remarks ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@Remarks", model.Remarks);
 
             conn.Open();
             var result = cmd.ExecuteScalar();
             return result == null ? 0 : Convert.ToInt32(result);
         }
-        #endregion
 
-        #region Request Methods
+        // -------------------------------
+        // Request Methods
+        // -------------------------------
         public int InsertAccessoryMaster(int empId, SqlConnection conn, SqlTransaction trans)
         {
             using var cmd = new SqlCommand("ITHW_AMT_AccessoryCreation_Master_Insert", conn, trans)
@@ -64,7 +76,7 @@ namespace AccessoryCreation.DataAccess
             return result == null ? 0 : Convert.ToInt32(result);
         }
 
-        public void InsertAccessoryRequest(int masterId, Accessory acc, SqlConnection conn, SqlTransaction trans)
+        public void InsertAccessoryRequest(int masterId, AccessoryRequestDetailDto acc, SqlConnection conn, SqlTransaction trans)
         {
             using var cmd = new SqlCommand("ITHW_AMT_AccessoryCreation_Insert", conn, trans)
             {
@@ -75,7 +87,7 @@ namespace AccessoryCreation.DataAccess
             cmd.Parameters.AddWithValue("@AccessoryType", acc.AccessoryType ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@AccessoryName", acc.AccessoryName ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@Make", acc.Make ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("@AcqDate", acc.AcqDate == default(DateTime) ? (object)DBNull.Value : acc.AcqDate);
+            cmd.Parameters.AddWithValue("@AcqDate", acc.AcqDate ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@AccessoryCount", acc.AccessoryCount);
             cmd.Parameters.AddWithValue("@ProductStatus", acc.ProductStatus ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@Remarks", acc.Remarks ?? (object)DBNull.Value);
@@ -83,7 +95,7 @@ namespace AccessoryCreation.DataAccess
             cmd.ExecuteNonQuery();
         }
 
-        public void InsertUpdateInventory(int masterId, Accessory acc, SqlConnection conn, SqlTransaction trans)
+        public void InsertUpdateInventory(int masterId, AccessoryInventoryDto acc, SqlConnection conn, SqlTransaction trans)
         {
             using var cmd = new SqlCommand("ITHW_AMT_AccessoryQuantity_InsertUpdate", conn, trans)
             {
@@ -99,19 +111,29 @@ namespace AccessoryCreation.DataAccess
             cmd.ExecuteNonQuery();
         }
 
-        public DataSet GetAccessoryDetails(int requestId)
+        public List<AccessoryRequestDetailResultDto> GetAccessoryDetails(int requestId)
         {
-            var ds = new DataSet();
+            var list = new List<AccessoryRequestDetailResultDto>();
             using var conn = new SqlConnection(_connectionString);
             using var cmd = new SqlCommand("ITHW_AMT_AccessoryCreation_GetRequestedAccessoryDetails", conn)
             {
                 CommandType = CommandType.StoredProcedure
             };
             cmd.Parameters.AddWithValue("@AccessoryWFMID", requestId);
-            using var da = new SqlDataAdapter(cmd);
-            da.Fill(ds);
-            return ds;
+            conn.Open();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list.Add(new AccessoryRequestDetailResultDto
+                {
+                    AccessoryWFMID = Convert.ToInt32(reader["AccessoryWFMID"]),
+                    AccessoryName = reader["AccessoryName"].ToString(),
+                    AccessoryCount = Convert.ToInt32(reader["AccessoryCount"]),
+                    ProductStatus = reader["ProductStatus"].ToString(),
+                    Remarks = reader["Remarks"].ToString()
+                });
+            }
+            return list;
         }
-        #endregion
     }
 }
