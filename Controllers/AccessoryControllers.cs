@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using AccessoryCreation.BusinessLogic;
 using AccessoryCreation.Models;
+using System;
 using System.Collections.Generic;
 
 namespace AccessoryCreation.Controllers
@@ -26,20 +27,17 @@ namespace AccessoryCreation.Controllers
             return Ok(new { Success = true, Data = data });
         }
 
-        [HttpPost]
-        public IActionResult AddAccessory([FromBody] AccessoryCreateDto model)
+        [HttpPost("AddNewAccessory")]
+        public IActionResult AddNewAccessory([FromBody] string accessoryName)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new { Success = false, Errors = ModelState });
-
             try
             {
-                int newId = _businessLogic.AddAccessory(model);
-                return Ok(new { Success = true, AccessoryId = newId });
+                var newId = _businessLogic.AddNewAccessory(accessoryName);
+                return Ok(new { Message = "Accessory added successfully", AccessoryID = newId });
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                return BadRequest(new { Success = false, Message = ex.Message });
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -54,37 +52,37 @@ namespace AccessoryCreation.Controllers
                 int masterId = _businessLogic.InsertRequestMaster(initiatorEmpId);
                 return Ok(new { Success = true, MasterId = masterId });
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(new { Success = false, Message = ex.Message });
             }
         }
 
-        [HttpPost("details/{masterId}")]
-        public IActionResult InsertDetails(int masterId, [FromBody] List<AccessoryRequestDetailDto> accessories)
+        [HttpPost("InsertAccessoryRequest")]
+        public IActionResult InsertAccessoryRequest([FromBody] AccessoryRequestDetailDto accessory)
         {
             try
             {
-                _businessLogic.InsertRequestDetails(masterId, accessories);
-                return Ok(new { Success = true, Message = "Accessory details inserted successfully." });
+                _businessLogic.InsertAccessoryRequest(accessory);
+                return Ok(new { Success = true, Message = "Accessory inserted successfully." });
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                return BadRequest(new { Success = false, Message = ex.Message });
+                return BadRequest(new { Success = false, Error = ex.Message });
             }
         }
 
-        [HttpPost("approve/{masterId}")]
-        public IActionResult ApproveAccessoryRequest(int masterId, [FromBody] List<AccessoryInventoryDto> accessories)
+        [HttpPost("InsertOrUpdateAccessoryQuantity")]
+        public IActionResult InsertOrUpdateAccessoryQuantity([FromBody] AccessoryQuantityDto accessory)
         {
             try
             {
-                _businessLogic.InsertIntoInventory(masterId, accessories);
-                return Ok(new { Success = true, Message = "Accessories added to inventory successfully." });
+                _businessLogic.InsertOrUpdateAccessoryQuantity(accessory);
+                return Ok(new { Message = "Accessory quantity updated successfully" });
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                return BadRequest(new { Success = false, Message = ex.Message });
+                return BadRequest(new { Error = ex.Message });
             }
         }
 

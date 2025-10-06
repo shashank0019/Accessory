@@ -12,35 +12,37 @@ namespace AccessoryCreation.BusinessLogic
 
         public AccessoryBusinessLogic(string connectionString)
         {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new ArgumentException("Connection string cannot be null or empty.", nameof(connectionString));
+
             _dataAccess = new AccessoryDataAccess(connectionString);
         }
+
 
         // -------------------------------
         // Catalog
         // -------------------------------
-        public List<AccessoryCatalogDto> GetAccessories()
-        {
-            return _dataAccess.GetAccessories();
-        }
+        public List<AccessoryCatalogDto> GetAccessories() => _dataAccess.GetAccessories();
 
-        public int AddAccessory(AccessoryCreateDto model)
+        public int AddNewAccessory(string accessoryName)
         {
-            if (model == null) throw new ArgumentNullException(nameof(model));
-            if (string.IsNullOrWhiteSpace(model.AccessoryName)) throw new Exception("AccessoryName required");
-            if (string.IsNullOrWhiteSpace(model.Make)) throw new Exception("Make required");
-            if (model.AccessoryCount <= 0) throw new Exception("AccessoryCount > 0 required");
-            if (string.IsNullOrWhiteSpace(model.Remarks)) throw new Exception("Remarks required");
+            if (string.IsNullOrWhiteSpace(accessoryName))
+                throw new ArgumentException("Accessory name cannot be empty.");
 
-            return _dataAccess.InsertAccessory(model);
+            return _dataAccess.AddNewAccessory(accessoryName);
         }
 
         // -------------------------------
-        // Request
+        // Requests
         // -------------------------------
         public int InsertRequestMaster(int initiatorEmpId)
         {
+            if (initiatorEmpId <= 0)
+                throw new ArgumentException("Invalid initiator employee ID.");
+
             using var conn = new SqlConnection(_dataAccess.ConnectionString);
             conn.Open();
+
             using var trans = conn.BeginTransaction();
             try
             {
@@ -55,54 +57,42 @@ namespace AccessoryCreation.BusinessLogic
             }
         }
 
-        public void InsertRequestDetails(int masterId, List<AccessoryRequestDetailDto> accessories)
+        public void InsertAccessoryRequest(AccessoryRequestDetailDto accessory)
         {
-            if (accessories == null || accessories.Count == 0)
-                throw new ArgumentException("Accessories cannot be empty");
+            if (accessory == null)
+                throw new ArgumentNullException(nameof(accessory), "Accessory data is required.");
 
-            using var conn = new SqlConnection(_dataAccess.ConnectionString);
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            try
-            {
-                foreach (var acc in accessories)
-                {
-                    _dataAccess.InsertAccessoryRequest(masterId, acc, conn, trans);
-                }
-                trans.Commit();
-            }
-            catch
-            {
-                trans.Rollback();
-                throw;
-            }
+            if (accessory.AccessoryWFMID <= 0)
+                throw new ArgumentException("AccessoryWFMID (master ID) must be greater than zero.");
+
+            if (accessory.AccessoryMID <= 0)
+                throw new ArgumentException("AccessoryMID must be greater than zero.");
+
+            if (accessory.AccessoryCount <= 0)
+                throw new ArgumentException("Accessory count must be greater than zero.");
+
+            _dataAccess.InsertAccessoryRequest(accessory);
         }
 
-        public void InsertIntoInventory(int masterId, List<AccessoryInventoryDto> accessories)
+        public void InsertOrUpdateAccessoryQuantity(AccessoryQuantityDto accessory)
         {
-            if (accessories == null || accessories.Count == 0)
-                throw new ArgumentException("Accessories cannot be empty");
+            if (accessory == null)
+                throw new ArgumentNullException(nameof(accessory), "Accessory data is required.");
 
-            using var conn = new SqlConnection(_dataAccess.ConnectionString);
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            try
-            {
-                foreach (var acc in accessories)
-                {
-                    _dataAccess.InsertUpdateInventory(masterId, acc, conn, trans);
-                }
-                trans.Commit();
-            }
-            catch
-            {
-                trans.Rollback();
-                throw;
-            }
+            if (string.IsNullOrWhiteSpace(accessory.AccessoryName))
+                throw new ArgumentException("Accessory name is required.");
+
+            if (accessory.AccessoryCount <= 0)
+                throw new ArgumentException("Accessory count must be greater than zero.");
+
+            _dataAccess.InsertOrUpdateAccessoryQuantity(accessory);
         }
 
         public List<AccessoryRequestDetailResultDto> GetAccessoryDetails(int requestId)
         {
+            if (requestId <= 0)
+                throw new ArgumentException("Invalid request ID.");
+
             return _dataAccess.GetAccessoryDetails(requestId);
         }
     }
